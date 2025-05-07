@@ -1,0 +1,105 @@
+
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>شارژ ساختمان من</title>
+  <style>
+    body { font-family: sans-serif; padding: 20px; background: #f9f9f9; }
+    h2 { color: #2c3e50; }
+    input, select, button { padding: 8px; margin: 5px 0; width: 100%; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 8px; border: 1px solid #ccc; text-align: center; }
+    .section { margin-top: 30px; padding: 15px; background: #fff; border-radius: 8px; box-shadow: 0 0 5px #ccc; }
+  </style>
+</head>
+<body>
+
+  <h2>اپلیکیشن شارژ ساختمان من</h2>
+
+  <div class="section">
+    <h3>ثبت واریزی واحدها</h3>
+    <label>واحد:</label>
+    <select id="unitSelect">
+      <option value="1">واحد ۱</option>
+      <option value="2">واحد ۲</option>
+      <option value="3">واحد ۳</option>
+      <option value="4">واحد ۴</option>
+      <option value="5">واحد ۵</option>
+      <option value="6">واحد ۶</option>
+      <option value="7">واحد ۷</option>
+      <option value="8">واحد ۸</option>
+    </select>
+    <label>مبلغ واریزی:</label>
+    <input type="number" id="amountInput" placeholder="مثلاً 200000">
+    <label>تاریخ:</label>
+    <input type="date" id="dateInput">
+    <button onclick="addPayment()">ثبت واریزی</button>
+  </div>
+
+  <div class="section">
+    <h3>ثبت هزینه ساختمان</h3>
+    <label>شرح هزینه:</label>
+    <input type="text" id="costDesc">
+    <label>مبلغ هزینه:</label>
+    <input type="number" id="costAmount">
+    <label>تاریخ:</label>
+    <input type="date" id="costDate">
+    <button onclick="addCost()">ثبت هزینه</button>
+  </div>
+
+  <div class="section">
+    <h3>گزارش‌گیری</h3>
+    <button onclick="generateReport()">نمایش گزارش</button>
+    <div id="reportArea"></div>
+  </div>
+
+  <script>
+    let payments = JSON.parse(localStorage.getItem('payments') || "[]");
+    let costs = JSON.parse(localStorage.getItem('costs') || "[]");
+
+    function saveData() {
+      localStorage.setItem('payments', JSON.stringify(payments));
+      localStorage.setItem('costs', JSON.stringify(costs));
+    }
+
+    function addPayment() {
+      const unit = document.getElementById('unitSelect').value;
+      const amount = parseInt(document.getElementById('amountInput').value);
+      const date = document.getElementById('dateInput').value;
+      if (!amount || !date) return alert("مبلغ و تاریخ را وارد کنید.");
+      payments.push({ unit, amount, date });
+      saveData();
+      alert("واریزی ذخیره شد.");
+    }
+
+    function addCost() {
+      const desc = document.getElementById('costDesc').value;
+      const amount = parseInt(document.getElementById('costAmount').value);
+      const date = document.getElementById('costDate').value;
+      if (!desc || !amount || !date) return alert("همه فیلدها را کامل کنید.");
+      costs.push({ desc, amount, date });
+      saveData();
+      alert("هزینه ثبت شد.");
+    }
+
+    function generateReport() {
+      let totalCosts = costs.reduce((sum, c) => sum + c.amount, 0);
+      let totalPayments = payments.reduce((sum, p) => sum + p.amount, 0);
+      let html = `<h4>گزارش کلی</h4>
+        <p>جمع کل هزینه‌ها: ${totalCosts.toLocaleString()} تومان</p>
+        <p>جمع کل واریزی‌ها: ${totalPayments.toLocaleString()} تومان</p>
+        <p>مانده صندوق: ${(totalPayments - totalCosts).toLocaleString()} تومان</p>
+        <h4>مانده هر واحد</h4><ul>`;
+      for (let i = 1; i <= 8; i++) {
+        const paid = payments.filter(p => p.unit == i).reduce((s, p) => s + p.amount, 0);
+        const debt = 200000 * costs.length - paid;
+        html += `<li>واحد ${i}: ${debt <= 0 ? 'بدهی ندارد' : 'بدهی: ' + debt.toLocaleString() + ' تومان'}</li>`;
+      }
+      html += "</ul>";
+      document.getElementById('reportArea').innerHTML = html;
+    }
+  </script>
+</body>
+</html>
